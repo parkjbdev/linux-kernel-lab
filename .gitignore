@@ -1,0 +1,17 @@
+.cache/
+.klab/
+labs/
+
+# build artifacts
+*.o
+*.o.d
+*.ko
+*.cmd
+*.symvers
+*.mod
+*.mod.c
+modules.order
+
+cscope.*
+compile_commands.json
+
