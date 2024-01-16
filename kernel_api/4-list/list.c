@@ -15,6 +15,7 @@
 MODULE_DESCRIPTION("Use list to process task info");
 MODULE_AUTHOR("SO2");
 MODULE_LICENSE("GPL");
+MODULE_INFO(intree, "Y");
 
 struct task_info {
 	pid_t pid;
@@ -42,6 +43,8 @@ static void task_info_add_to_list(int pid)
 	struct task_info *ti;
 
 	/* TODO 1: Allocate task_info and add it to list */
+  ti = task_info_alloc(pid);
+  list_add_tail(&ti->list, &head);
 }
 
 static void task_info_add_for_current(void)
@@ -49,7 +52,9 @@ static void task_info_add_for_current(void)
 	/* Add current, parent, next and next of next to the list */
 	task_info_add_to_list(current->pid);
 	task_info_add_to_list(current->parent->pid);
+	// NOLINTNEXTLINE(bugprone-sizeof-expression)
 	task_info_add_to_list(next_task(current)->pid);
+	// NOLINTNEXTLINE(bugprone-sizeof-expression)
 	task_info_add_to_list(next_task(next_task(current))->pid);
 }
 
@@ -72,6 +77,11 @@ static void task_info_purge_list(void)
 	struct task_info *ti;
 
 	/* TODO 2: Iterate over the list and delete all elements */
+  list_for_each_safe(p, q, &head) {
+    ti = list_entry(p, struct task_info, list);
+    list_del(p);
+    kfree(ti);
+  }
 }
 
 static int list_init(void)
