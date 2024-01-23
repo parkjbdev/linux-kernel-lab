@@ -44,17 +44,16 @@ static void task_info_add_to_list(int pid)
 
 	/* TODO 1: Allocate task_info and add it to list */
   ti = task_info_alloc(pid);
-  list_add_tail(&ti->list, &head);
+  list_add(&ti->list, &head);
 }
 
+static void task_info_print_list(const char *msg);
 static void task_info_add_for_current(void)
 {
 	/* Add current, parent, next and next of next to the list */
 	task_info_add_to_list(current->pid);
 	task_info_add_to_list(current->parent->pid);
-	// NOLINTNEXTLINE(bugprone-sizeof-expression)
 	task_info_add_to_list(next_task(current)->pid);
-	// NOLINTNEXTLINE(bugprone-sizeof-expression)
 	task_info_add_to_list(next_task(next_task(current))->pid);
 }
 
