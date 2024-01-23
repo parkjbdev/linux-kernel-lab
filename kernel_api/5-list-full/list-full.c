@@ -14,6 +14,7 @@
 MODULE_DESCRIPTION("Full list processing");
 MODULE_AUTHOR("SO2");
 MODULE_LICENSE("GPL");
+MODULE_INFO(intree, "Y");
 
 struct task_info {
 	pid_t pid;
@@ -44,6 +45,12 @@ static struct task_info *task_info_find_pid(int pid)
 	struct task_info *ti;
 
 	/* TODO 1: Look for pid and return task_info or NULL if not found */
+	list_for_each(p, &head) {
+		ti = list_entry(p, struct task_info, list);
+		if (ti->pid == pid) {
+			return ti;
+		}
+	}
 
 	return NULL;
 }
@@ -84,6 +91,12 @@ static void task_info_print_list(const char *msg)
 	pr_info("]\n");
 }
 
+#define EXPIRATION_TIMEOUT (3 * HZ)
+#define EXPIRATION_COUNT 5
+#define IS_EXPIRED(ti)                                       \
+	((jiffies - (ti)->timestamp > EXPIRATION_TIMEOUT) && \
+	 atomic_read(&(ti)->count) < EXPIRATION_COUNT)
+
 static void task_info_remove_expired(void)
 {
 	struct list_head *p, *q;
@@ -91,7 +104,8 @@ static void task_info_remove_expired(void)
 
 	list_for_each_safe(p, q, &head) {
 		ti = list_entry(p, struct task_info, list);
-		if (jiffies - ti->timestamp > 3 * HZ && atomic_read(&ti->count) < 5) {
+		// Expiration Condition
+		if (IS_EXPIRED(ti)) {
 			list_del(p);
 			kfree(ti);
 		}
@@ -128,6 +142,12 @@ static void list_full_exit(void)
 	struct task_info *ti;
 
 	/* TODO 2: Ensure that at least one task is not deleted */
+	if (!list_empty(&head)) {
+		ti = list_entry(head.next, struct task_info, list);
+		if (IS_EXPIRED(ti)) {
+			atomic_set(&ti->count, EXPIRATION_COUNT);
+		}
+	}
 
 	task_info_remove_expired();
 	task_info_print_list("after removing expired");
