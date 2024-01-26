@@ -18,6 +18,7 @@
 MODULE_DESCRIPTION("SO2 character device");
 MODULE_AUTHOR("SO2");
 MODULE_LICENSE("GPL");
+MODULE_INFO(intree, "Y");
 
 #define LOG_LEVEL	KERN_INFO
 
@@ -50,7 +51,11 @@ static int so2_cdev_open(struct inode *inode, struct file *file)
 
 	/* TODO 3: inode->i_cdev contains our cdev struct, use container_of to obtain a pointer to so2_device_data */
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wuninitialized"
 	file->private_data = data;
+#pragma clang diagnostic pop 
+
 
 #ifndef EXTRA
 	/* TODO 3: return immediately if access is != 0, use atomic_cmpxchg */
@@ -91,7 +96,10 @@ so2_cdev_read(struct file *file,
 
 	/* TODO 4: Copy data->buffer to user_buffer, use copy_to_user */
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wuninitialized"
 	return to_read;
+#pragma clang diagnostic pop 
 }
 
 static ssize_t
@@ -141,6 +149,13 @@ static int so2_cdev_init(void)
 	int i;
 
 	/* TODO 1: register char device region for MY_MAJOR and NUM_MINORS starting at MY_MINOR */
+  // For dynamic allocation
+  // dev_t dev = kmalloc(sizeof(dev_t), GFP_KERNEL);
+  // alloc_chrdev_region(&dev, MY_MINOR, NUM_MINORS, MODULE_NAME);
+  dev_t dev = MKDEV(MY_MAJOR, MY_MINOR);
+
+  register_chrdev_region(dev, NUM_MINORS, MODULE_NAME);
+  pr_info("Registered device %s with major number %d and minor numbers %d to %d\n", MODULE_NAME, MAJOR(dev), MY_MINOR, MY_MINOR + NUM_MINORS - 1);
 
 	for (i = 0; i < NUM_MINORS; i++) {
 #ifdef EXTRA
@@ -165,6 +180,9 @@ static void so2_cdev_exit(void)
 	}
 
 	/* TODO 1: unregister char device region, for MY_MAJOR and NUM_MINORS starting at MY_MINOR */
+  dev_t dev = MKDEV(MY_MAJOR, MY_MINOR);
+  unregister_chrdev_region(dev, NUM_MINORS);
+  pr_info("Unregistered device %s with major number %d and minor numbers %d to %d\n", MODULE_NAME, MAJOR(dev), MY_MINOR, MY_MINOR + NUM_MINORS - 1);
 }
 
 module_init(so2_cdev_init);
