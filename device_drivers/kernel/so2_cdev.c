@@ -20,23 +20,22 @@ MODULE_AUTHOR("SO2");
 MODULE_LICENSE("GPL");
 MODULE_INFO(intree, "Y");
 
-#define LOG_LEVEL	KERN_INFO
+#define LOG_LEVEL KERN_INFO
 
-#define MY_MAJOR		42
-#define MY_MINOR		0
-#define NUM_MINORS		1
-#define MODULE_NAME		"so2_cdev"
-#define MESSAGE			"hello\n"
-#define IOCTL_MESSAGE		"Hello ioctl"
+#define MY_MAJOR 42
+#define MY_MINOR 0
+#define NUM_MINORS 1
+#define MODULE_NAME "so2_cdev"
+#define MESSAGE "hello\n"
+#define IOCTL_MESSAGE "Hello ioctl"
 
 #ifndef BUFSIZ
-#define BUFSIZ		4096
+#define BUFSIZ 4096
 #endif
-
 
 struct so2_device_data {
 	/* TODO 2: add cdev member */
-  struct cdev cdev;
+	struct cdev cdev;
 	/* TODO 4: add buffer with BUFSIZ elements */
 	/* TODO 7: extra members for home */
 	/* TODO 3: add atomic_t access variable to keep track if file is opened */
@@ -46,19 +45,20 @@ struct so2_device_data devs[NUM_MINORS];
 
 static int so2_cdev_open(struct inode *inode, struct file *file)
 {
-	struct so2_device_data *data = container_of(inode->i_cdev, struct so2_device_data, cdev);
+	struct so2_device_data *data =
+		container_of(inode->i_cdev, struct so2_device_data, cdev);
 
 	/* TODO 2: print message when the device file is open. */
-  file->private_data = data;
-  pr_info("Device %s with major number %d and minor number %d was opened\n", MODULE_NAME, MAJOR(inode->i_rdev), MINOR(inode->i_rdev));
+	file->private_data = data;
+	pr_info("Device %s with major number %d and minor number %d was opened\n",
+		MODULE_NAME, MAJOR(inode->i_rdev), MINOR(inode->i_rdev));
 
 	/* TODO 3: inode->i_cdev contains our cdev struct, use container_of to obtain a pointer to so2_device_data */
 
-// #pragma clang diagnostic push
-// #pragma clang diagnostic ignored "-Wuninitialized"
+	// #pragma clang diagnostic push
+	// #pragma clang diagnostic ignored "-Wuninitialized"
 	// file->private_data = data;
-// #pragma clang diagnostic pop 
-
+	// #pragma clang diagnostic pop
 
 #ifndef EXTRA
 	/* TODO 3: return immediately if access is != 0, use atomic_cmpxchg */
@@ -70,28 +70,26 @@ static int so2_cdev_open(struct inode *inode, struct file *file)
 	return 0;
 }
 
-static int
-so2_cdev_release(struct inode *inode, struct file *file)
+static int so2_cdev_release(struct inode *inode, struct file *file)
 {
 	/* TODO 2: print message when the device file is closed. */
-  pr_info("Device %s with major number %d and minor number %d was closed\n", MODULE_NAME, MAJOR(inode->i_rdev), MINOR(inode->i_rdev));
+	pr_info("Device %s with major number %d and minor number %d was closed\n",
+		MODULE_NAME, MAJOR(inode->i_rdev), MINOR(inode->i_rdev));
 
 #ifndef EXTRA
 	struct so2_device_data *data =
-		(struct so2_device_data *) file->private_data;
+		(struct so2_device_data *)file->private_data;
 
 	/* TODO 3: reset access variable to 0, use atomic_set */
 #endif
 	return 0;
 }
 
-static ssize_t
-so2_cdev_read(struct file *file,
-		char __user *user_buffer,
-		size_t size, loff_t *offset)
+static ssize_t so2_cdev_read(struct file *file, char __user *user_buffer,
+			     size_t size, loff_t *offset)
 {
 	struct so2_device_data *data =
-		(struct so2_device_data *) file->private_data;
+		(struct so2_device_data *)file->private_data;
 	size_t to_read;
 
 #ifdef EXTRA
@@ -106,14 +104,11 @@ so2_cdev_read(struct file *file,
 #pragma clang diagnostic pop
 }
 
-static ssize_t
-so2_cdev_write(struct file *file,
-		const char __user *user_buffer,
-		size_t size, loff_t *offset)
+static ssize_t so2_cdev_write(struct file *file, const char __user *user_buffer,
+			      size_t size, loff_t *offset)
 {
 	struct so2_device_data *data =
-		(struct so2_device_data *) file->private_data;
-
+		(struct so2_device_data *)file->private_data;
 
 	/* TODO 5: copy user_buffer to data->buffer, use copy_from_user */
 	/* TODO 7: extra tasks for home */
@@ -121,11 +116,11 @@ so2_cdev_write(struct file *file,
 	return size;
 }
 
-static long
-so2_cdev_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
+static long so2_cdev_ioctl(struct file *file, unsigned int cmd,
+			   unsigned long arg)
 {
 	struct so2_device_data *data =
-		(struct so2_device_data *) file->private_data;
+		(struct so2_device_data *)file->private_data;
 	int ret = 0;
 	int remains;
 
@@ -141,14 +136,14 @@ so2_cdev_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 
 static const struct file_operations so2_fops = {
 	.owner = THIS_MODULE,
-/* TODO 2: add open and release functions */
-  .open = so2_cdev_open,
-  .release = so2_cdev_release,
-/* TODO 4: add read function */
-  .read = so2_cdev_read,
-/* TODO 5: add write function */
-  .write = so2_cdev_write,
-/* TODO 6: add ioctl function */
+	/* TODO 2: add open and release functions */
+	.open = so2_cdev_open,
+	.release = so2_cdev_release,
+	/* TODO 4: add read function */
+	.read = so2_cdev_read,
+	/* TODO 5: add write function */
+	.write = so2_cdev_write,
+	/* TODO 6: add ioctl function */
 };
 
 static int so2_cdev_init(void)
@@ -157,26 +152,32 @@ static int so2_cdev_init(void)
 	int i;
 
 	/* TODO 1: register char device region for MY_MAJOR and NUM_MINORS starting at MY_MINOR */
-  dev_t dev = MKDEV(MY_MAJOR, MY_MINOR);
+	dev_t dev = MKDEV(MY_MAJOR, MY_MINOR);
 
-  err = register_chrdev_region(dev, NUM_MINORS, MODULE_NAME);
-  if (err != 0) {
-    pr_err("Failed to register device %s with major number %d and minor numbers %d to %d\n", MODULE_NAME, MY_MAJOR, MY_MINOR, MY_MINOR + NUM_MINORS - 1);
-    return err;
-  }
-  pr_info("Registered device %s with major number %d and minor numbers %d to %d\n", MODULE_NAME, MAJOR(dev), MINOR(dev), MINOR(dev) + NUM_MINORS - 1);
+	err = register_chrdev_region(dev, NUM_MINORS, MODULE_NAME);
+
+	if (err != 0) {
+		pr_err("Failed to register device %s with major number %d and minor numbers %d to %d\n",
+		       MODULE_NAME, MY_MAJOR, MY_MINOR,
+		       MY_MINOR + NUM_MINORS - 1);
+		return err;
+	}
+
+	pr_info("Registered device %s with major number %d and minor numbers %d to %d\n",
+		MODULE_NAME, MAJOR(dev), MINOR(dev),
+		MINOR(dev) + NUM_MINORS - 1);
 
 	for (i = 0; i < NUM_MINORS; i++) {
 #ifdef EXTRA
 		/* TODO 7: extra tasks, for home */
 #else
-		/*TODO 4: initialize buffer with MESSAGE string */
+		/* TODO 4: initialize buffer with MESSAGE string */
 		/* TODO 3: set access variable to 0, use atomic_set */
 #endif
 		/* TODO 7: extra tasks for home */
 		/* TODO 2: init and add cdev to kernel core */
-    cdev_init(&devs[i].cdev, &so2_fops);
-    cdev_add(&devs[i].cdev, MKDEV(MY_MAJOR, i), NUM_MINORS);
+		cdev_init(&devs[i].cdev, &so2_fops);
+		cdev_add(&devs[i].cdev, MKDEV(MY_MAJOR, i), NUM_MINORS);
 	}
 
 	return 0;
@@ -192,9 +193,10 @@ static void so2_cdev_exit(void)
 	}
 
 	/* TODO 1: unregister char device region, for MY_MAJOR and NUM_MINORS starting at MY_MINOR */
-  dev_t dev = MKDEV(MY_MAJOR, MY_MINOR);
-  unregister_chrdev_region(dev, NUM_MINORS);
-  pr_info("Unregistered device %s with major number %d and minor numbers %d to %d\n", MODULE_NAME, MAJOR(dev), MY_MINOR, MY_MINOR + NUM_MINORS - 1);
+	dev_t dev = MKDEV(MY_MAJOR, MY_MINOR);
+	unregister_chrdev_region(dev, NUM_MINORS);
+	pr_info("Unregistered device %s with major number %d and minor numbers %d to %d\n",
+		MODULE_NAME, MAJOR(dev), MY_MINOR, MY_MINOR + NUM_MINORS - 1);
 }
 
 module_init(so2_cdev_init);
